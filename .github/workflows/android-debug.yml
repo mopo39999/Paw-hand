@@ -1,58 +1,90 @@
-name: Build Android Debug APK
+name: Build Paw & Hand APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  android-debug:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-      - name: Setup Node 22
-        uses: actions/setup-node@v4
+      - name: Find Paw & Hand folder
+        shell: bash
+        run: |
+          PACKAGE_FILE=$(find . -maxdepth 4 -name package.json -not -path "*/node_modules/*" | head -n 1)
+
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "ERROR: package.json was not found"
+            find . -maxdepth 3 -type f | sort | head -n 150
+            exit 1
+          fi
+
+          APP_DIR=$(cd "$(dirname "$PACKAGE_FILE")" && pwd)
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+          echo "Paw & Hand found here:"
+          echo "$APP_DIR"
+          ls -la "$APP_DIR"
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
 
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Check npm connection run:   |
-            npm config set registry https://registry.npmjs.org 
-            npm ping
+      - name: Check npm
+        run: |
+          cd "$APP_DIR"
+          npm ping
 
       - name: Install dependencies
-  run: |
-    npm install \
-      --verbose \
-      --no-audit \
-      --no-fund \
-      --progress=false \
-      --fetch-retries=2 \
-      --fetch-timeout=60000
-      - name: Build web app
-        run: npm run build
+        run: |
+          cd "$APP_DIR"
+          npm install --no-audit --no-fund --progress=false
+
+      - name: Build Paw & Hand
+        run: |
+          cd "$APP_DIR"
+          npm run build
 
       - name: Create Android project
-        run: npx cap add android
+        run: |
+          cd "$APP_DIR"
 
-      - name: Sync Capacitor
-        run: npx cap sync android
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
 
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug
+          npx cap sync android
+
+      - name: Build Android APK
+        run: |
+          cd "$APP_DIR/android"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Prepare APK
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/build-output"
+
+          cp "$APP_DIR/android/app/build/outputs/apk/debug/app-debug.apk" "$GITHUB_WORKSPACE/build-output/Paw-and-Hand.apk"
+
+          ls -lh "$GITHUB_WORKSPACE/build-output/Paw-and-Hand.apk"
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: paw-and-hand-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Paw-and-Hand-Android
+          path: build-output/Paw-and-Hand.apk
           if-no-files-found: error
