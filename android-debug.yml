@@ -1,0 +1,109 @@
+name: Build Paw & Hand APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Find Paw & Hand app folder
+        shell: bash
+        run: |
+          echo "Looking for package.json..."
+
+          if [ -f "$GITHUB_WORKSPACE/package.json" ]; then
+            APP_DIR="$GITHUB_WORKSPACE"
+          elif [ -f "$GITHUB_WORKSPACE/paw-v9/package.json" ]; then
+            APP_DIR="$GITHUB_WORKSPACE/paw-v9"
+          else
+            PACKAGE_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 4 \
+              -name package.json \
+              -not -path "*/node_modules/*" \
+              | head -n 1)
+
+            if [ -z "$PACKAGE_FILE" ]; then
+              echo "::error::Could not find package.json anywhere in the repository."
+              echo "Files GitHub can see:"
+              find "$GITHUB_WORKSPACE" -maxdepth 3 -type f | sort | head -n 150
+              exit 1
+            fi
+
+            APP_DIR=$(dirname "$PACKAGE_FILE")
+          fi
+
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          echo "Found Paw & Hand at:"
+          echo "$APP_DIR"
+          echo
+          ls -la "$APP_DIR"
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Show versions
+        run: |
+          node --version
+          npm --version
+          java -version
+          echo "APP_DIR=$APP_DIR"
+
+      - name: Install dependencies
+        run: |
+          cd "$APP_DIR"
+          npm install --no-audit --no-fund
+
+      - name: Build Paw & Hand
+        run: |
+          cd "$APP_DIR"
+          npm run build
+
+      - name: Create or sync Android project
+        run: |
+          cd "$APP_DIR"
+
+          if [ -d android ]; then
+            echo "Android project already exists."
+          else
+            npx cap add android
+          fi
+
+          npx cap sync android
+
+      - name: Build Android APK
+        run: |
+          cd "$APP_DIR/android"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Prepare APK download
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/build-output"
+
+          cp \
+            "$APP_DIR/android/app/build/outputs/apk/debug/app-debug.apk" \
+            "$GITHUB_WORKSPACE/build-output/Paw-and-Hand.apk"
+
+          ls -lh "$GITHUB_WORKSPACE/build-output/Paw-and-Hand.apk"
+
+      - name: Upload Paw & Hand APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: Paw-and-Hand-Android
+          path: build-output/Paw-and-Hand.apk
+          if-no-files-found: error
