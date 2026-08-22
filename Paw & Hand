@@ -1,0 +1,60 @@
+name: Build Android Debug APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: paw-v9
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Verify Paw & Hand files
+        run: |
+          pwd
+          test -f package.json
+          echo "Paw & Hand package.json found"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: paw-and-hand-debug-apk
+          path: paw-v9/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
