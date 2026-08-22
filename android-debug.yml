@@ -11,33 +11,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract Paw & Hand
+      - name: Extract Paw & Hand ZIP
         shell: bash
         run: |
-          ZIP_FILE=$(find . -maxdepth 1 -type f -name "*.zip" | head -n 1)
+          ZIP_FILE=$(find . -maxdepth 1 -type f -name "*.zip" -print -quit)
 
           if [ -z "$ZIP_FILE" ]; then
-            echo "No Paw & Hand ZIP file found"
+            echo "ERROR: ZIP file not found"
+            ls -la
             exit 1
           fi
 
-          echo "Using ZIP:"
-          echo "$ZIP_FILE"
+          echo "Found ZIP: $ZIP_FILE"
 
           mkdir -p extracted
           unzip -q "$ZIP_FILE" -d extracted
 
-          if [ ! -f extracted/paw-v9/package.json ]; then
-            echo "package.json still not found after extracting"
-            find extracted -maxdepth 3 -type f | sort | head -n 100
+          PACKAGE_FILE=$(find extracted -name package.json -not -path "*/node_modules/*" -print -quit)
+
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "ERROR: package.json not found inside ZIP"
+            find extracted -maxdepth 4 -type f | sort | head -n 150
             exit 1
           fi
 
-          echo "APP_DIR=$GITHUB_WORKSPACE/extracted/paw-v9" >> "$GITHUB_ENV"
-          echo "Paw & Hand extracted successfully"
+          APP_DIR=$(cd "$(dirname "$PACKAGE_FILE")" && pwd)
+
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+          echo "Paw & Hand found at:"
+          echo "$APP_DIR"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -63,7 +69,11 @@ jobs:
       - name: Create Android project
         run: |
           cd "$APP_DIR"
-          npx cap add android
+
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+
           npx cap sync android
 
       - name: Build Android APK
