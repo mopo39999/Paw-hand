@@ -27,13 +27,22 @@ jobs:
           java-version: '21'
 
       - name: Extract Paw & Hand V10
-        run: |
-          ZIP_FILE="paw-and-hand-production-v10.zip"
+        run: ZIP_FILE=$(find . -type f -iname "*v10*.zip" | head -n 1)
 
-          if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: $ZIP_FILE not found"
-            exit 1
-          fi
+echo "Found V10 ZIP: $ZIP_FILE"
+
+if [ -z "$ZIP_FILE" ]; then
+  echo "ERROR: No V10 ZIP found anywhere in repository"
+  echo "Files currently in repository:"
+  find . -maxdepth 4 -type f | sort
+  exit 1
+fi
+          
+
+          
+            
+            
+
 
           rm -rf build-src
           mkdir build-src
