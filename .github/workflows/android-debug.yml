@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: false
+          package-manager-cache: false
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,45 +26,23 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Find and extract Paw & Hand
+      - name: Verify project
         run: |
-          ZIP_FILE=$(find . -maxdepth 2 -type f \
-            -name "paw-and-hand-production-v*.zip" \
-            | sort -V | tail -n 1)
+          echo "Repository files:"
+          ls -la
 
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: Paw & Hand production ZIP not found"
-            find . -maxdepth 2 -type f
+          if [ ! -f package.json ]; then
+            echo "ERROR: package.json not found in repository root"
             exit 1
           fi
-
-          echo "Using: $ZIP_FILE"
-
-          mkdir -p build-src
-          unzip -q "$ZIP_FILE" -d build-src
-
-          PACKAGE_FILE=$(find build-src -name package.json -not -path "*/node_modules/*" | head -n 1)
-
-          if [ -z "$PACKAGE_FILE" ]; then
-            echo "ERROR: package.json not found after extraction"
-            find build-src -maxdepth 4 -type f
-            exit 1
-          fi
-
-          APP_DIR=$(dirname "$PACKAGE_FILE")
-          echo "App directory: $APP_DIR"
-          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
 
       - name: Install dependencies
-        working-directory: ${{ env.APP_DIR }}
         run: npm install --no-audit --no-fund
 
       - name: Build web app
-        working-directory: ${{ env.APP_DIR }}
         run: npm run build
 
       - name: Create Android project
-        working-directory: ${{ env.APP_DIR }}
         run: |
           if [ ! -d android ]; then
             npx cap add android
@@ -72,7 +50,7 @@ jobs:
           npx cap sync android
 
       - name: Build debug APK
-        working-directory: ${{ env.APP_DIR }}/android
+        working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
@@ -81,5 +59,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Paw-and-Hand-Android
-          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
