@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f0c14" />
+  <meta name="description" content="Paw & Hand privacy policy." />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <title>Privacy — Paw & Hand</title>
+</head>
+<body>
+  <main class="standalone-page"><article class="panel legal-page">
+    <p class="eyebrow">PAW &amp; HAND</p><h1>Privacy Policy</h1>
+    <p class="small">Last updated: August 21, 2026</p>
+    <p>Paw &amp; Hand is a dog-first dating service for adults 18 and older. This policy describes the data used by the current application.</p>
+    <h2>Data we process</h2>
+    <p>We process account email through Supabase Auth; profile information such as name, age, dating preferences, biography, lifestyle selections, approximate location label, and dog information; profile photos; swipe choices; matches; messages; Dog Date proposals; blocks; and safety reports.</p>
+    <h2>How it is used</h2>
+    <p>Data is used to authenticate accounts, show eligible profiles, calculate compatibility, create matches, deliver messages, support Dog Date proposals, and operate safety features. The current app does not include advertising or third-party analytics SDKs.</p>
+    <h2>Location</h2>
+    <p>The MVP does not require or store precise GPS coordinates. Users may provide an approximate location label for matching context.</p>
+    <h2>Photos and security</h2>
+    <p>Profile media is stored in a private Supabase Storage bucket. The client receives expiring signed links to display private media. Database access is protected with Row Level Security.</p>
+    <h2>Safety and moderation</h2>
+    <p>Profile text, chat messages, and Dog Date text may be checked by baseline automated rules intended to reduce clearly prohibited content and spam. Safety reports may include the related profile, match, or message identifiers so the operator can investigate abuse. Automated filtering is not a substitute for human moderation.</p>
+    <h2>Deletion</h2>
+    <p>Signed-in users can delete their account from Profile → Account &amp; privacy. An external deletion flow is also available at <a href="./delete-account.html">Delete account</a>. Account deletion removes profile media before deleting the authentication account; app records tied to that account are deleted through database relationships.</p>
+    <h2>Retention and legal requests</h2>
+    <p>The production operator must document any legally required retention, fraud-prevention retention, backup behavior, and jurisdiction-specific privacy rights before public launch.</p>
+    <h2>Operator and contact</h2>
+    <p>Privacy and support contact: <a href="mailto:mopo39999@gmail.com">mopo39999@gmail.com</a>.</p>
+    <p><strong>Commercial-launch review item:</strong> add the legal operator/company name, mailing address where required, and any data-protection representative details required for launch jurisdictions.</p>
+    <div class="notice">This disclosure reflects the current codebase. It is not legal advice and should receive legal review before a commercial public launch.</div>
+    <p class="legal-links"><a href="./">Back to Paw &amp; Hand</a><a href="./terms.html">Terms &amp; community rules</a><a href="./safety.html">Safety</a><a href="./support.html">Support</a></p>
+  </article></main>
+</body>
+</html>

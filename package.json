@@ -1,0 +1,35 @@
+{
+  "name": "paw-and-hand",
+  "private": true,
+  "version": "10.0.0",
+  "type": "module",
+  "description": "Paw & Hand \u2014 lightweight dog-first dating app for web, Android and iOS.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "native:sync": "npm run build && cap sync",
+    "android:add": "cap add android",
+    "android:open": "cap open android",
+    "ios:add": "cap add ios",
+    "ios:open": "cap open ios",
+    "validate": "node --check src/main.js && node --check src/api.js && node --check src/push.js && node --check src/delete-account.js && node --check vite.config.js && node --check scripts/patch-ios-push.mjs && node scripts/validate-config.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "ios:patch-push": "node scripts/patch-ios-push.mjs",
+    "ios:prepare": "npm run build && cap sync ios && npm run ios:patch-push"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.0",
+    "@supabase/supabase-js": "2.112.3",
+    "@capacitor/push-notifications": "8.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/cli": "8.5.0",
+    "@capacitor/ios": "8.5.0",
+    "vite": "8.2.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
